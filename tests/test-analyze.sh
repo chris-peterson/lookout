@@ -107,15 +107,15 @@ else
   PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: missing log exits non-zero"
 fi
 
-echo "--- CLAUDEWATCH_LOG=off reports logging disabled ---"
+echo "--- LOOKOUT_LOG=off reports logging disabled ---"
 TOTAL=$((TOTAL + 1))
 # Sandbox HOME so the default path resolves to a nonexistent file, forcing the
 # not-found branch; env off must produce the "disabled" guidance, not "no sessions".
-OFFERR=$(CLAUDEWATCH_LOG=off HOME="$TMP" python3 "$ANALYZE" 2>&1 >/dev/null || true)
+OFFERR=$(LOOKOUT_LOG=off HOME="$TMP" python3 "$ANALYZE" 2>&1 >/dev/null || true)
 if echo "$OFFERR" | grep -qi "disabled"; then
-  PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: CLAUDEWATCH_LOG=off reports logging disabled"
+  PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: LOOKOUT_LOG=off reports logging disabled"
 else
-  FAIL=$((FAIL + 1)); echo -e "  ${RED}FAIL${NC}: CLAUDEWATCH_LOG=off reports logging disabled (got: ${OFFERR:-none})"
+  FAIL=$((FAIL + 1)); echo -e "  ${RED}FAIL${NC}: LOOKOUT_LOG=off reports logging disabled (got: ${OFFERR:-none})"
 fi
 
 rm -f "$TMP"/*

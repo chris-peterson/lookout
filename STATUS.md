@@ -1,4 +1,4 @@
-# ClaudeWatch — Spec Coverage Status
+# lookout — Spec Coverage Status
 
 Tracking status of the requirements declared in [SPEC.md](SPEC.md). Updated
 whenever an audit (`/spec-audit`) is run, when implementation lands, or when
@@ -24,7 +24,7 @@ the file and its tests.
 | EN-05a | No-arg fallback to `../watches` | Covered | `scripts/watchdog.py` (`_decide`) |
 | EN-10a | An exception on the decision path denies, naming it | Covered | `scripts/watchdog.py` (`main`) + `tests/test-engine.sh` |
 | EN-13 | Edit screens the post-edit file, decoded by its byte-order mark; `new_string` alone when the file is unreadable or `old_string` is absent | Covered | `scripts/watchdog.py` (`_resolve_input`, `_decode_file`) + `tests/test-engine.sh` |
-| LOG-01..LOG-06 | Decision logging side channel: on by default (`CLAUDEWATCH_LOG=off` to opt out), records the command shape rather than the raw command, owner-only perms (0600/0700), schema-versioned header that discards pre-shape logs on upgrade | Covered | `scripts/watchdog.py` (`_log_event`, `command_shape`) + `tests/test-logging.sh` |
+| LOG-01..LOG-06 | Decision logging side channel: on by default (`LOOKOUT_LOG=off` to opt out), records the command shape rather than the raw command, owner-only perms (0600/0700), schema-versioned header that discards pre-shape logs on upgrade | Covered | `scripts/watchdog.py` (`_log_event`, `command_shape`) + `tests/test-logging.sh` |
 | RS-01..RS-08 | Rule set format, discovery, `extensions` gating | Covered | `scripts/watchdog.py` + `tests/test-engine.sh` |
 | RL-01..RL-20 | Rule fields, `target`, evaluation order, error handling, unrecognized-field warning, the `unless_condition`/`unless_regex` exemptions and their `is_in_project_tree` / `is_ephemeral_scratch` / `is_recoverable` / `is_under_scratch_root` / `is_in_tree_or_scratch` predicates | Covered | `scripts/watchdog.py` (`_targets_under_scratch_root`, `_targets_in_tree_or_scratch`, `_remove_item_targets`) + `tests/test-engine.sh` + `tests/test-watch-files.sh` + `tests/test-watch-pwsh.sh` |
 | OUT-01..OUT-05, OUT-07, OUT-08 | Output decisions, formatting, aggregation, allow-by-default, deny source tag, compound-command ask→deny escalation across Bash and Monitor, command substitution inside double quotes counted as compound | Covered | `scripts/watchdog.py` (`_is_compound_command`) + `tests/test-engine.sh` + `tests/test-output.sh` |
@@ -39,12 +39,12 @@ the file and its tests.
 | EXT-01..EXT-03 | Auto-discovery, disable-by-rename, no-code-change | Covered | `scripts/watchdog.py`, `tests/test-engine.sh` |
 | OVR-01..OVR-05 | User rule overrides outside the install folder: format, tier moves keeping exemptions, set off, stale ignored, malformed denies | Covered | `scripts/watchdog.py` (`load_overrides`, `apply_overrides`, `evaluate_rules`, `_decide`) + `tests/test-overrides.sh` |
 | OVR-06, OVR-07 | Session-start record of differences from the shipped rules; `overrides.py` as the one writer | Covered | `scripts/overrides.py` (`session_start`, `cmd_set`, `cmd_reset`, `show`), `scripts/watchdog.py` (`override_report`, `append_log_record`), `hooks/hooks.yml` + `tests/test-overrides.sh` |
-| SK-01 | `/ClaudeWatch:help` overview *(retired in 0.16.0)* | Removed | README + docs site |
-| SK-02..SK-05, SK-07..SK-10, SK-12 | `/ClaudeWatch:rules` lists effective rules and edits the overrides file: tier moves, off, reset, set off/on, validation | Covered | `skills/rules/SKILL.md`, `scripts/overrides.py` + `tests/test-overrides.sh` |
+| SK-01 | `/lookout:help` overview *(retired in 0.16.0)* | Removed | README + docs site |
+| SK-02..SK-05, SK-07..SK-10, SK-12 | `/lookout:rules` lists effective rules and edits the overrides file: tier moves, off, reset, set off/on, validation | Covered | `skills/rules/SKILL.md`, `scripts/overrides.py` + `tests/test-overrides.sh` |
 | SK-06, SK-11 | Pattern conflict scan; `new` rule set *(retired)* | Removed | Overrides cannot add a rule or pattern |
-| SK-13..SK-17 | `/ClaudeWatch:learn` decision-log analysis: ask candidates and deny summary, approved items applied as overrides | Covered | `skills/learn/SKILL.md`, `scripts/analyze-decisions.py` (`analyze`) + `tests/test-analyze.sh` |
+| SK-13..SK-17 | `/lookout:learn` decision-log analysis: ask candidates and deny summary, approved items applied as overrides | Covered | `skills/learn/SKILL.md`, `scripts/analyze-decisions.py` (`analyze`) + `tests/test-analyze.sh` |
 | SK-18, SK-19 | Window provenance on the analysis (records, sessions, span); post-apply log reset, archiving by default with `--hard` delete | Covered | `scripts/analyze-decisions.py` (`summarize_window`), `scripts/reset-decisions.py` + `tests/test-reset-decisions.sh` |
-| SK-20..SK-25 | `/ClaudeWatch:unattended`: mark on invocation, clear on a typed prompt, deny permission prompts and AskUserQuestion while marked, `on`/`off`/`status` CLI, the logged local-git allowance | Covered | `skills/unattended/SKILL.md`, `scripts/unattended.py` (`handle`, `cli`, `_shape`), `scripts/watchdog.py` (`unattended_allowance`, `record_unattended`) + `tests/test-unattended.sh` |
+| SK-20..SK-25 | `/lookout:unattended`: mark on invocation, clear on a typed prompt, deny permission prompts and AskUserQuestion while marked, `on`/`off`/`status` CLI, the logged local-git allowance | Covered | `skills/unattended/SKILL.md`, `scripts/unattended.py` (`handle`, `cli`, `_shape`), `scripts/watchdog.py` (`unattended_allowance`, `record_unattended`) + `tests/test-unattended.sh` |
 | DOC-01, DOC-02, DOC-04, DOC-05 | Docsify site, `just docs` regen (rules + prompts pages), YAML schema reference | Covered | `docs/`, `SCHEMA.md`, `build/gen-rules-doc.py`, `justfile` |
 | DIST-01 | Expose install metadata in manifest | Covered | `.claude-plugin/plugin.json` (name, version, description, repository, license) — hosting/marketplace mechanism is out of scope per SPEC.md |
 | DIST-02 | `.claude-plugin/plugin.json` manifest | Covered | `.claude-plugin/plugin.json` |
@@ -67,7 +67,7 @@ STATUS.md updated: no ID change, normative count stays 113. EN-15 now reduces a 
 
 ### 2026-11-06 — Coverage refresh (spec-status)
 
-STATUS.md updated: +15 IDs (OUT-09 unattended escalation, HK-06 unattended hooks, SK-20..SK-25 `/ClaudeWatch:unattended`, OVR-01..OVR-07 rule overrides), 2 retired (SK-06, SK-11), normative count 100 → 113. SK-02..SK-12 now describe `/ClaudeWatch:rules` editing the overrides file. The SK-13..SK-17 row drops the allow-candidate pointers (`load_allow_patterns`, `is_already_allowed`) with the code.
+STATUS.md updated: +15 IDs (OUT-09 unattended escalation, HK-06 unattended hooks, SK-20..SK-25 `/lookout:unattended`, OVR-01..OVR-07 rule overrides), 2 retired (SK-06, SK-11), normative count 100 → 113. SK-02..SK-12 now describe `/lookout:rules` editing the overrides file. The SK-13..SK-17 row drops the allow-candidate pointers (`load_allow_patterns`, `is_already_allowed`) with the code.
 
 ### 2026-10-19 — Coverage refresh (spec-status)
 
@@ -91,7 +91,7 @@ STATUS.md updated: +2 IDs (SK-18 window provenance, SK-19 log reset), header cou
 
 ### 2026-08-20 — Coverage refresh (spec-status)
 
-STATUS.md updated: +1 ID (EN-14, Monitor screened as a bash input), normative count 84 → 85. Rows amended for the Monitor matcher (HK-01), the escalation now spanning Bash and Monitor (OUT-08), and per-tool allow candidates in `/ClaudeWatch:learn` (SK-14).
+STATUS.md updated: +1 ID (EN-14, Monitor screened as a bash input), normative count 84 → 85. Rows amended for the Monitor matcher (HK-01), the escalation now spanning Bash and Monitor (OUT-08), and per-tool allow candidates in `/lookout:learn` (SK-14).
 
 The table's ID inventory is behind the spec independently of this change: SPEC.md now declares 93 normative IDs (95 `[XX-NN]` lines less the two retired ones, OUT-06 and HK-02), and the clustered rows above do not reach SK-18/SK-19 or the current RL range. The count in the header was carried forward from the last audit rather than recomputed; a full reconciliation needs `/sextant:spec-sync`.
 
@@ -114,7 +114,7 @@ behind the spec; reconciled the following:
 - Added rows for spec sections that had landed since the last audit but were
   missing from the table: EN-12/EN-13 (Write/Edit dispatch), LOG-01..LOG-04
   (decision logging), RS-07/RS-08 (`extensions` gating), RL-10..RL-13
-  (`target` field), and SK-13..SK-17 (`/ClaudeWatch:learn`).
+  (`target` field), and SK-13..SK-17 (`/lookout:learn`).
 - Corrected **DIST-01** wording from "marketplace install" to "expose install
   metadata in manifest"; marketplace registration is out of scope per the
   DIST-01 text.

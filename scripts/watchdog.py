@@ -21,13 +21,13 @@ CLAUDE_PROJECT_DIR, which Claude Code exports to hook commands, is the only
 environment variable on the decision path: it bounds the in-tree `rm` exemption
 alongside the hook's own cwd (see `_exempt_roots`).
 
-Each decision is appended as a JSONL record to ~/.claude/claudewatch/decisions.jsonl
-by default — the side channel the /ClaudeWatch:learn workflow reads. Set
-CLAUDEWATCH_LOG to a path to log elsewhere, or to "off" (also 0/false/none/empty)
+Each decision is appended as a JSONL record to ~/.claude/lookout/decisions.jsonl
+by default — the side channel the /lookout:learn workflow reads. Set
+LOOKOUT_LOG to a path to log elsewhere, or to "off" (also 0/false/none/empty)
 to disable it. Logging never affects the decision itself.
 
 Every reason reads `<rule>: <reason> — <ref>`, in the prompt and in the log
-alike. Deny messages additionally append the `[plugin:ClaudeWatch]` source tag
+alike. Deny messages additionally append the `[plugin:lookout]` source tag
 that Claude Code shows on ask prompts but omits on deny errors; the logged
 reasons carry no tag.
 """
@@ -207,7 +207,7 @@ def parse_rules_yml(path):
     return result
 
 
-OVERRIDES_PATH = "~/.claude/claudewatch/overrides.yml"
+OVERRIDES_PATH = "~/.claude/lookout/overrides.yml"
 OVERRIDE_TIERS = ("ask", "block", "off")
 
 
@@ -326,7 +326,7 @@ def _message_plain(v):
     """Canonical one-line message: `<prefix>: <reason>[ — <ref>]`.
 
     Used for both the displayed reason and the decision log the
-    `/ClaudeWatch:learn` side channel reads.
+    `/lookout:learn` side channel reads.
     """
     head = f"{v['prefix']}: {v['reason']}" if v["prefix"] else v["reason"]
     return f"{head} — {v['ref']}" if v["ref"] else head
@@ -334,7 +334,7 @@ def _message_plain(v):
 
 # Source attribution Claude Code shows on ask prompts but omits on deny errors;
 # appended to deny reasons so the user always sees which plugin made the call.
-_PLUGIN_TAG = "[plugin:ClaudeWatch]"
+_PLUGIN_TAG = "[plugin:lookout]"
 
 
 def _rule_target(rule):
@@ -956,7 +956,7 @@ def _compound_escalation():
     }
 
 
-UNATTENDED_DIR = "~/.claude/claudewatch/unattended"
+UNATTENDED_DIR = "~/.claude/lookout/unattended"
 _SESSION_ID = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
@@ -1120,7 +1120,7 @@ def evaluate_rules(config, input_kind, input_text, file_extension=None, cwd=None
     return blocks, asks
 
 
-DEFAULT_LOG_PATH = "~/.claude/claudewatch/decisions.jsonl"
+DEFAULT_LOG_PATH = "~/.claude/lookout/decisions.jsonl"
 _LOG_OFF_VALUES = frozenset(("", "off", "0", "false", "none"))
 _LOG_DEFAULT_VALUES = frozenset(("1", "true", "on", "yes"))
 # Log schema version, written as the header line `{"schema": N}` ([LOG-06]).
@@ -1244,7 +1244,7 @@ def command_shape(command):
     `VAR=value` assignments and `sudo`, then keeps the program and (for known
     subcommand tools) its leading subcommand tokens, stopping at the first flag,
     path, or value. This is what `[LOG-03]` records in place of the raw command,
-    and what `/ClaudeWatch:learn` groups by — defined here so the engine (which
+    and what `/lookout:learn` groups by — defined here so the engine (which
     writes the log) and the analyzer (which reads it) share one definition.
     Applying it to an already-reduced shape is idempotent, so the analyzer can
     reduce legacy raw-command records the same way.
@@ -1271,13 +1271,13 @@ def matched_shape(command, pos, parts=None):
 def _log_event(data, input_kind, input_text, decision, matched, extra=None):
     """Append a decision record to the log unless logging is disabled.
 
-    The side channel the `/ClaudeWatch:learn` workflow reads. It never
+    The side channel the `/lookout:learn` workflow reads. It never
     influences the decision (which stays a pure function of command + rules)
     and never changes the exit code. A log-write failure is reported to stderr
     and swallowed so the hook still returns its decision.
 
-    Destination resolution (case-insensitive) of CLAUDEWATCH_LOG:
-      - unset, "1"/"true"/"on"/"yes" -> default path ~/.claude/claudewatch/decisions.jsonl
+    Destination resolution (case-insensitive) of LOOKOUT_LOG:
+      - unset, "1"/"true"/"on"/"yes" -> default path ~/.claude/lookout/decisions.jsonl
       - "off"/"0"/"false"/"none"/"" -> logging disabled (this is the opt-out)
       - anything else -> treated as the destination path
     """
@@ -1309,8 +1309,8 @@ def _log_event(data, input_kind, input_text, decision, matched, extra=None):
 
 
 def log_destination():
-    """The decision log's path per CLAUDEWATCH_LOG, or None when logging is off."""
-    raw = os.environ.get("CLAUDEWATCH_LOG")
+    """The decision log's path per LOOKOUT_LOG, or None when logging is off."""
+    raw = os.environ.get("LOOKOUT_LOG", os.environ.get("CLAUDEWATCH_LOG"))
     if raw is None:
         return os.path.expanduser(DEFAULT_LOG_PATH)
     token = raw.strip().lower()
@@ -1546,7 +1546,7 @@ def _decide():
         allowance = unattended_allowance(input_text) if input_kind == "bash" else None
         if allowance:
             asked = "; ".join(v["prefix"] or v["reason"] for v in chosen)
-            record_unattended(data.get("session_id"), "ALLOW", f"{allowance} (ClaudeWatch ask not escalated: {asked})")
+            record_unattended(data.get("session_id"), "ALLOW", f"{allowance} (lookout ask not escalated: {asked})")
             decision, chosen = "allow", []
         else:
             decision, chosen = "deny", [_unattended_escalation()] + chosen

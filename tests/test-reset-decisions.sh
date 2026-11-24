@@ -50,7 +50,7 @@ check_grep "deleted" "$OUT" "reports a delete"
 rm -rf "$TMP"
 
 echo "--- logging disabled is a no-op with guidance ---"
-OUT=$(CLAUDEWATCH_LOG=off python3 "$RESET" 2>&1); RC=$?
+OUT=$(LOOKOUT_LOG=off python3 "$RESET" 2>&1); RC=$?
 TOTAL=$((TOTAL + 1)); if [ "$RC" -ne 0 ]; then pass "disabled exits non-zero"; else fail "disabled exits non-zero (got $RC)"; fi
 check_grep "disabled" "$OUT" "disabled explains why"
 

@@ -4,7 +4,7 @@ shipyard := "uvx --from 'git+https://github.com/chris-peterson/shipyard@v2' ship
 [private]
 default:
     @echo ""
-    @echo "  ClaudeWatch screens every shell command against regex safety rules"
+    @echo "  lookout screens every shell command against regex safety rules"
     @echo "  before it runs."
     @echo ""
     @just --list --unsorted --list-prefix '    ' --list-heading ''
@@ -23,7 +23,7 @@ try:
 # Open a session with the plugin loaded and go straight to the rules skill
 [group('try it out')]
 rules:
-    claude --plugin-dir . "/ClaudeWatch:rules"
+    claude --plugin-dir . "/lookout:rules"
 
 # Run the unattended test suite
 [group('check your work')]

@@ -1,4 +1,4 @@
-# Source of record for ClaudeWatch's hooks — shipyard generates hooks.json.
+# Source of record for lookout's hooks — shipyard generates hooks.json.
 hooks:
   - event: PreToolUse
     matcher: Bash|Monitor
@@ -12,13 +12,13 @@ hooks:
     description: Screens the code Claude writes to disk against the watch rules before it lands.
   - event: SessionStart
     command: 'bash "${CLAUDE_PLUGIN_ROOT}/hooks/emit-rules.sh"'
-    description: Emit ClaudeWatch's ambient guidance into context.
+    description: Emit lookout's ambient guidance into context.
   - event: SessionStart
     command: 'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/overrides.py" session-start'
     description: Logs how the user's rule overrides differ from the shipped rules, and warns when the overrides file is broken or stale.
   - event: UserPromptSubmit
     command: 'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/unattended.py"'
-    description: Marks the session unattended on /ClaudeWatch:unattended, and clears the mark when the user types anything else.
+    description: Marks the session unattended on /lookout:unattended, and clears the mark when the user types anything else.
   - event: PostToolUse
     matcher: Skill
     command: 'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/unattended.py"'

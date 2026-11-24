@@ -1,25 +1,25 @@
 ---
 name: learn
 description: >
-  Analyze the ClaudeWatch decision log to find the rules that ask most and the
+  Analyze the lookout decision log to find the rules that ask most and the
   blocks that get in the way, and propose overrides (move a rule between ask and
   block, or turn it off) reviewed as one batch, then reset the log.
 disable-model-invocation: true
 ---
 
-# ClaudeWatch — learn
+# lookout — learn
 
-ClaudeWatch watches every command and records its decision; this skill is the
+lookout watches every command and records its decision; this skill is the
 *learn* step that turns those recordings into suggestions. You vet a window's
 worth of accumulated prompts once, as a batch, instead of pressing enter on
 each one. It is the replacement for the generic transcript-scanning approach:
-it works from the hook's own decisions, so it knows what ClaudeWatch allowed,
+it works from the hook's own decisions, so it knows what lookout allowed,
 asked, and blocked — not just what looked read-only.
 
 ## 0. Prerequisite: a decision log to learn from
 
 Logging is **on by default** — the hook writes to
-`~/.claude/claudewatch/decisions.jsonl` unless `CLAUDEWATCH_LOG` is set to an
+`~/.claude/lookout/decisions.jsonl` unless `LOOKOUT_LOG` is set to an
 opt-out value (`off`, `0`, `false`, `none`, or empty). Each `Bash` record stores
 the command *shape* (`git push`, not the full command with its arguments), never
 the raw command, so inline secrets stay out of the plaintext log; the file is
@@ -29,17 +29,17 @@ anything else.
 First, check whether logging has been turned off:
 
 ```bash
-echo "CLAUDEWATCH_LOG=[${CLAUDEWATCH_LOG:-<unset>}]"
+echo "LOOKOUT_LOG=[${LOOKOUT_LOG:-<unset>}]"
 ```
 
 - **`off` / `0` / `false` / `none` / empty** — logging is **disabled**. Warn the
-  user **loudly** that disabling logging disables this skill: `/ClaudeWatch:learn`
+  user **loudly** that disabling logging disables this skill: `/lookout:learn`
   has no data to work from and stays useless until logging is re-enabled. To
   re-enable, remove the opt-out from the `env` block in their `settings.json`
   (unset it, or set it back to the default path) and restart their sessions:
 
   ```json
-  { "env": { "CLAUDEWATCH_LOG": "~/.claude/claudewatch/decisions.jsonl" } }
+  { "env": { "LOOKOUT_LOG": "~/.claude/lookout/decisions.jsonl" } }
   ```
 
   Then stop — there is nothing to learn from until logging is back on and
@@ -48,7 +48,7 @@ echo "CLAUDEWATCH_LOG=[${CLAUDEWATCH_LOG:-<unset>}]"
 Otherwise logging is on; check whether the log has any records yet:
 
 ```bash
-ls -la "${CLAUDEWATCH_LOG:-$HOME/.claude/claudewatch/decisions.jsonl}"
+ls -la "${LOOKOUT_LOG:-$HOME/.claude/lookout/decisions.jsonl}"
 ```
 
 If the file does not exist, logging is on but no sessions have run with the hook
@@ -76,17 +76,17 @@ one line — e.g. *"Based on 1,650 decisions across 23 sessions over 2.1 days
 (2026-06-01 → 2026-06-03)."* A short span or few sessions means the suggestions
 are thin; say so.
 
-Then render the JSON as two tables. ClaudeWatch's own decisions are only ever
+Then render the JSON as two tables. lookout's own decisions are only ever
 `ask` or `deny`; what it lets through is Claude Code's to decide, so the log's
 allowed records feed `by_mode` and the window, never a proposal.
 
-- **Ask candidates** — commands ClaudeWatch repeatedly *asks* about. Columns:
+- **Ask candidates** — commands lookout repeatedly *asks* about. Columns:
   shape, count, the matched rule(s). For each, the choice is: move the rule to
   `block` if it guards something unrecoverable, turn it `off` if every prompt
   it raised was approved and the user doesn't want it, or leave it. A high
   count under `auto` is *not* evidence the prompt is doing its job — see "Auto
   mode" below for why an `ask` record can't tell you whether anyone saw it.
-- **Deny summary** — commands ClaudeWatch *blocked*, grouped by reason. A high
+- **Deny summary** — commands lookout *blocked*, grouped by reason. A high
   count means a workflow the user needs is blocked. The choice is: move the rule
   to `ask`, turn it `off`, or leave it. Default to leaving it; a block is there
   because what it guards has no recovery.
@@ -94,8 +94,8 @@ allowed records feed `by_mode` and the window, never a proposal.
 ## 3. Apply the approved items as overrides
 
 Ask which items to apply, one decision per item. Each one becomes an override
-in `~/.claude/claudewatch/overrides.yml`, written by the same program
-`/ClaudeWatch:rules` uses, so it survives a plugin upgrade and never touches the
+in `~/.claude/lookout/overrides.yml`, written by the same program
+`/lookout:rules` uses, so it survives a plugin upgrade and never touches the
 shipped rules.
 
 A `matched` entry is `<rule name>: <reason> — <ref>`, without the rule set. Find
@@ -108,13 +108,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/overrides.py" show --json
 
 Before writing, list each change as `<set> / <rule>: <shipped tier> -> <new
 tier>` and get an explicit `yes`. Name every block being lowered to ask or
-turned off, since that removes a refusal ClaudeWatch ships with. Each change is:
+turned off, since that removes a refusal lookout ships with. Each change is:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/overrides.py" set <set> "<rule name>" <ask|block|off>
 ```
 
-Run a change that moves a rule to `block` directly. ClaudeWatch blocks the agent
+Run a change that moves a rule to `block` directly. lookout blocks the agent
 from running a change to `ask` or `off` ([SH-01] `watch-self`), so print those
 commands, each prefixed with `! ` and with `${CLAUDE_PLUGIN_ROOT}` expanded to
 the plugin's path, and ask the user to type them into the prompt. A command the
@@ -142,7 +142,7 @@ keeps re-surfacing those same commands on the next pass. Resetting starts the ne
 so the next learn measures only what the new configuration still prompts on.
 
 Reset **archives** by default — it moves the log to
-`~/.claude/claudewatch/archive/decisions-<timestamp>.jsonl`, so prior history is
+`~/.claude/lookout/archive/decisions-<timestamp>.jsonl`, so prior history is
 recoverable — and reports what it cleared:
 
 ```bash
@@ -156,7 +156,7 @@ user applied nothing, leave the log alone.
 
 ## Auto mode
 
-A `deny` from ClaudeWatch blocks in every permission mode, because the hook runs
+A `deny` from lookout blocks in every permission mode, because the hook runs
 before the mode is checked. An `ask` prompts only in a prompting mode. In `auto`
 the command runs without a prompt
 ([claude-code#89561](https://github.com/anthropics/claude-code/issues/89561)),

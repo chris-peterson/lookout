@@ -8,16 +8,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOOK="$SCRIPT_DIR/../scripts/watchdog.py"
 RULES_DIR="$SCRIPT_DIR/../watches"
 
-# Logging is on by default and writes to the real ~/.claude/claudewatch log.
+# Logging is on by default and writes to the real ~/.claude/lookout log.
 # Disable it for the suite so rule tests don't pollute it; the logging tests
-# set CLAUDEWATCH_LOG per-invocation to override this.
-export CLAUDEWATCH_LOG=off
+# set LOOKOUT_LOG per-invocation to override this.
+export LOOKOUT_LOG=off
 # Claude Code exports CLAUDE_PROJECT_DIR to hook commands, and it anchors the
 # in-tree rm exemption ([RL-16]) — so running the suite from inside a session
 # would otherwise feed it a root the fixtures never asked for. Clear it here and
 # let the cases that exercise it export their own.
-unset CLAUDE_PROJECT_DIR
-# The engine reads the user's rule overrides from ~/.claude/claudewatch
+unset CLAUDE_PROJECT_DIR CLAUDEWATCH_LOG
+# The engine reads the user's rule overrides from ~/.claude/lookout
 # ([OVR-01]), so a real overrides file would change what the shipped rules
 # decide here. Point HOME at a path that doesn't exist; cases that need a home
 # directory make their own.

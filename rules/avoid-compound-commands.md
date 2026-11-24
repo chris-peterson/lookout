@@ -3,7 +3,7 @@
 Reaching for `| tail`, `2>&1 | head`, or `$(…)` to shape a command's output is
 the reflex that trips this. When the command you're wrapping is a commit, a
 push, an install, or a destructive op (`git push`, `git commit`, `npm install`,
-`rm -rf`), ClaudeWatch escalates the whole compound from an `ask` to a hard block.
+`rm -rf`), lookout escalates the whole compound from an `ask` to a hard block.
 The reason: a `deny` is honored in every permission mode, and an `ask` is not —
 so the block is what survives to reach the user.
 

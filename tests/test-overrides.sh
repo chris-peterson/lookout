@@ -7,7 +7,7 @@ source "$(cd "$(dirname "$0")" && pwd)/harness.sh"
 OVR="$SCRIPT_DIR/../scripts/overrides.py"
 SANDBOX=$(mktemp -d /tmp/cw-overrides.XXXXXX)
 export HOME="$SANDBOX"
-FILE="$SANDBOX/.claude/claudewatch/overrides.yml"
+FILE="$SANDBOX/.claude/lookout/overrides.yml"
 
 check() {
   local label="$1" ok="$2"
@@ -98,7 +98,7 @@ check "reset of everything removes the file" "$( [ -e "$FILE" ] && echo no || ec
 
 echo "--- session start: deviations are logged ([OVR-06]) ---"
 LOG="$SANDBOX/decisions.jsonl"
-out=$(printf '{"session_id":"s1"}' | CLAUDEWATCH_LOG="$LOG" python3 "$OVR" session-start)
+out=$(printf '{"session_id":"s1"}' | LOOKOUT_LOG="$LOG" python3 "$OVR" session-start)
 check "no overrides: nothing logged" "$( [ -e "$LOG" ] && echo no || echo yes)"
 overrides <<'EOF'
 watch-dotnet: off
@@ -106,7 +106,7 @@ watch-git:
   git commit: block
   gone rule: off
 EOF
-out=$(printf '{"session_id":"s1"}' | CLAUDEWATCH_LOG="$LOG" python3 "$OVR" session-start)
+out=$(printf '{"session_id":"s1"}' | LOOKOUT_LOG="$LOG" python3 "$OVR" session-start)
 rec=$(tail -n 1 "$LOG")
 check "the record is a session_start event" "$(has "$rec" '"event":"session_start"')"
 check "it names the changed rule with both tiers" "$(has "$rec" '{"set":"watch-git","rule":"git commit","shipped":"ask","effective":"block"}')"
@@ -115,10 +115,10 @@ check "it names the stale override" "$(has "$rec" '{"set":"watch-git","rule":"go
 check "the stale override is called out in context" "$(has "$out" "gone rule")"
 check "the analyzer skips the record" "$(yes_if python3 "$SCRIPT_DIR/../scripts/analyze-decisions.py" --log "$LOG")"
 printf 'watch-git: on\n' | overrides
-out=$(printf '{"session_id":"s1"}' | CLAUDEWATCH_LOG="$LOG" python3 "$OVR" session-start)
+out=$(printf '{"session_id":"s1"}' | LOOKOUT_LOG="$LOG" python3 "$OVR" session-start)
 check "a malformed file is called out in context" "$(has "$out" "every screened command")"
 check "and logged" "$(has "$(tail -n 1 "$LOG")" '"overrides_error"')"
-out=$(printf '{"session_id":"s1"}' | CLAUDEWATCH_LOG=off python3 "$OVR" session-start)
+out=$(printf '{"session_id":"s1"}' | LOOKOUT_LOG=off python3 "$OVR" session-start)
 check "logging off still warns in context" "$(has "$out" "every screened command")"
 
 rm -rf "$SANDBOX"

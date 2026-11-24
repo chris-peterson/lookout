@@ -1,5 +1,6 @@
 {
   "enabledPlugins": {
+    "lookout@getty-claude-marketplace": false,
     "ClaudeWatch@getty-claude-marketplace": false
   },
   "hooks": {

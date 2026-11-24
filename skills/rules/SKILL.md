@@ -1,15 +1,15 @@
 ---
 name: rules
 description: >
-  View ClaudeWatch's rules and change how they apply to you: move a rule between
+  View lookout's rules and change how they apply to you: move a rule between
   block and ask, turn a rule or a whole rule set off, or restore the shipped
   tier, kept in an overrides file that survives plugin upgrades.
 disable-model-invocation: true
 ---
 
-ClaudeWatch ships its rules in `watches/watch-*.yml`, inside the plugin's
+lookout ships its rules in `watches/watch-*.yml`, inside the plugin's
 install folder, which every upgrade replaces. A user's changes live in
-`~/.claude/claudewatch/overrides.yml` instead, and `scripts/overrides.py` is the
+`~/.claude/lookout/overrides.yml` instead, and `scripts/overrides.py` is the
 only program that writes it. This skill lists the rules as they apply now and
 walks each change through a preview before writing.
 
@@ -104,7 +104,7 @@ Confirm changes? [yes / edit / abort]
 - **edit** — return to step 4.
 - **abort** — discard the pending changes.
 
-Turning a block rule off or down to ask removes a refusal ClaudeWatch ships
+Turning a block rule off or down to ask removes a refusal lookout ships
 with. Name each one in the preview so the confirmation covers it.
 
 ### 6. Apply
@@ -123,13 +123,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/overrides.py" reset
 also removes its entry. Never edit `watches/` or the overrides file by hand from
 this skill.
 
-**Run only the tightening changes** (a `set … block`). ClaudeWatch blocks the
+**Run only the tightening changes** (a `set … block`). lookout blocks the
 agent from running a `set … ask`, a `set … off`, or any `reset` ([SH-01]
 `watch-self`), since a prompt-injected agent could use them to switch off the
 rules guarding it. For those, print the exact commands, each prefixed with `! `
 and with `${CLAUDE_PLUGIN_ROOT}` expanded to the plugin's path, and ask the user
 to type them into the prompt. A command the user types with `!` runs in the
-shell without passing through PreToolUse hooks, so ClaudeWatch doesn't screen it.
+shell without passing through PreToolUse hooks, so lookout doesn't screen it.
 Wait for the user to say they ran them before step 7.
 
 ### 7. Verify

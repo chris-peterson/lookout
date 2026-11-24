@@ -1,11 +1,11 @@
 {
-  "name": "ClaudeWatch",
+  "name": "lookout",
   "version": "1.0.1",
   "description": "Screens every shell command and every file Claude writes, before either lands. Blocks the dangerous, asks on anything that changes state.",
   "author": {
     "name": "chris-peterson"
   },
-  "repository": "https://github.com/chris-peterson/ClaudeWatch",
+  "repository": "https://github.com/chris-peterson/lookout",
   "license": "MIT",
   "keywords": [
     "claude",
@@ -18,7 +18,7 @@
     "installs",
     "git-guardian"
   ],
-  "homepage": "https://chris-peterson.github.io/ClaudeWatch/#/",
+  "homepage": "https://chris-peterson.github.io/lookout/#/",
   "icon": ".claude-plugin/icon.svg",
-  "documentationUrl": "https://chris-peterson.github.io/ClaudeWatch/#/"
+  "documentationUrl": "https://chris-peterson.github.io/lookout/#/"
 }

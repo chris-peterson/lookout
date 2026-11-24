@@ -1,6 +1,6 @@
 ---
 name: unattended
-description: Work while the user is away, making best-judgment calls, logging them, and never waiting on a question, a permission prompt, or a ClaudeWatch ask.
+description: Work while the user is away, making best-judgment calls, logging them, and never waiting on a question, a permission prompt, or a lookout ask.
 when_to_use: Use when the user says brb or that they're stepping away.
 ---
 
@@ -25,7 +25,7 @@ call, write it down, and keep going.**
 Invoking the skill marks the session unattended, subagents included. While it is
 marked:
 
-- **ClaudeWatch's `ask` tier is a block.** A command or file write a watch rule
+- **lookout's `ask` tier is a block.** A command or file write a watch rule
   would ask about is denied with *"unattended session: escalated to block"*, in
   every permission mode, `auto` included. Nobody is here to answer it, and in
   `auto` it would otherwise run unconfirmed.
@@ -53,7 +53,7 @@ return.
 | `git switch <branch>` | moving between branches (not `-f` / `--discard-changes`) |
 
 Plan the run inside that set. Any other git command that would prompt is denied,
-whether or not ClaudeWatch has a rule for it: that covers `git checkout
+whether or not lookout has a rule for it: that covers `git checkout
 <branch>`, `merge`, `rebase`, `restore`, `rm`, `mv`, `branch`, `stash`, `reset`,
 `push`, and `commit --amend`. Read-only commands (`status`, `diff`, `log`,
 `show`) are unaffected unless your session would have prompted on them. Reach
@@ -138,7 +138,7 @@ Render the path as a clickable link when you surface it so the user can open it.
 ## Shape gates still cost a turn
 
 A gate that fires on a command's *shape* (a pipe, an `&&` chain, a `$(…)`)
-clears by reshaping, and ClaudeWatch's ambient note "Before you pipe or chain,
+clears by reshaping, and lookout's ambient note "Before you pipe or chain,
 check the lead command" carries the rewrites. Two that matter most when nobody
 is watching:
 

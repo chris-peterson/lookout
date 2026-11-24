@@ -4,7 +4,7 @@ unattended: keep a session marked unattended while the user is away ([SK-20]–[
 
 Run as a hook, it reads one event from stdin:
 
-  - UserPromptSubmit led by /ClaudeWatch:unattended or /unattended -> mark
+  - UserPromptSubmit led by /lookout:unattended or /unattended -> mark
   - PostToolUse of the Skill tool invoking the unattended skill   -> mark
   - any other UserPromptSubmit the user typed                    -> unmark, and
     say so in the agent's context
@@ -32,8 +32,8 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from watchdog import record_unattended, unattended_allowance, unattended_marker  # noqa: E402
 
-SKILL_NAMES = ("unattended", "ClaudeWatch:unattended")
-_INVOCATION = re.compile(r"^\s*/(ClaudeWatch:)?unattended(\s|$)")
+SKILL_NAMES = ("unattended", "lookout:unattended")
+_INVOCATION = re.compile(r"^\s*/(lookout:)?unattended(\s|$)")
 _INJECTED = re.compile(r"^\s*(<task-notification>|<system-reminder|Another Claude session sent a message)")
 _SUBCOMMAND_TOOLS = {"git", "dotnet", "glab", "gh", "npm", "just", "docker"}
 _SUBCOMMAND_LIKE = re.compile(r"^[a-z][a-z-]*$")
@@ -84,7 +84,7 @@ def handle(event):
         elif os.path.isfile(marker):
             os.remove(marker)
             print("unattended: off. The user sent a prompt, so permission prompts and "
-                  "ClaudeWatch's ask tier reach them again. If they say they're stepping "
+                  "lookout's ask tier reach them again. If they say they're stepping "
                   f"away again, run `python3 \"{os.path.abspath(__file__)}\" on`.")
 
     elif name == "PostToolUse":

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-reset-decisions: clear the ClaudeWatch decision log so the next analysis
+reset-decisions: clear the lookout decision log so the next analysis
 measures from a fresh baseline.
 
-After `/ClaudeWatch:learn` proposals are applied (rule edits) the accumulated
+After `/lookout:learn` proposals are applied (rule edits) the accumulated
 history would otherwise keep re-surfacing commands the user already decided on.
 Resetting starts the next window from the post-change baseline (SK-19).
 
-By default the log is **archived** — moved to `~/.claude/claudewatch/archive/`
+By default the log is **archived** — moved to `~/.claude/lookout/archive/`
 beside the durable log — so prior history stays recoverable, matching the
 project's "block is for no-recovery" ethos. `--hard` deletes it outright.
 
@@ -24,14 +24,14 @@ import os
 import sys
 from datetime import datetime, timezone
 
-DEFAULT_LOG = "~/.claude/claudewatch/decisions.jsonl"
+DEFAULT_LOG = "~/.claude/lookout/decisions.jsonl"
 _LOG_OFF_VALUES = {"", "off", "0", "false", "none"}
 _LOG_DEFAULT_VALUES = {"1", "true", "on", "yes"}
 
 
 def resolve_log(arg_log):
-    """Return (path, disabled) mirroring the engine's CLAUDEWATCH_LOG handling."""
-    raw = arg_log if arg_log is not None else os.environ.get("CLAUDEWATCH_LOG")
+    """Return (path, disabled) mirroring the engine's LOOKOUT_LOG handling."""
+    raw = arg_log if arg_log is not None else os.environ.get("LOOKOUT_LOG", os.environ.get("CLAUDEWATCH_LOG"))
     if raw is None:
         return os.path.expanduser(DEFAULT_LOG), False
     token = raw.strip().lower()
@@ -75,10 +75,10 @@ def summarize(path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Reset the ClaudeWatch decision log.")
+    parser = argparse.ArgumentParser(description="Reset the lookout decision log.")
     parser.add_argument("--log", default=None,
                         help="path to decisions.jsonl (default: resolved from "
-                             f"$CLAUDEWATCH_LOG, else {DEFAULT_LOG})")
+                             f"$LOOKOUT_LOG, else {DEFAULT_LOG})")
     parser.add_argument("--hard", action="store_true",
                         help="delete the log instead of archiving it (unrecoverable)")
     args = parser.parse_args()
@@ -87,7 +87,7 @@ def main():
 
     if disabled:
         print(
-            "reset-decisions: logging is disabled (CLAUDEWATCH_LOG is set to off); "
+            "reset-decisions: logging is disabled (LOOKOUT_LOG is set to off); "
             "there is no active log to reset.",
             file=sys.stderr,
         )

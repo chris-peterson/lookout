@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart hook: emit ClaudeWatch's ambient guidance into context. Stdout is
+# SessionStart hook: emit lookout's ambient guidance into context. Stdout is
 # added to context on every SessionStart (startup, resume, compaction — no
 # matcher in hooks.json), so the guidance survives a compaction. It steers the
 # agent away from the compound-command escalation ([OUT-08]) before it triggers:
@@ -12,7 +12,7 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
 RULES_DIR="$PLUGIN_ROOT/rules"
 [ -d "$RULES_DIR" ] || exit 0
 
-printf '# Ambient rules from the ClaudeWatch plugin\n\n'
+printf '# Ambient rules from the lookout plugin\n\n'
 for f in "$RULES_DIR"/*.md; do
   [ -e "$f" ] || break
   cat "$f"

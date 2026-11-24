@@ -63,7 +63,7 @@ def unified_table(config):
 # from the shared theme variables (Dracula palette) so the cards adapt to
 # light/dark mode — no hardcoded colors. Two shapes: an `ask` confirmation
 # prompt (purple top rule, Yes/No options) and a `block` rejected-tool-result
-# line (red bullet, red error plus the `[plugin:ClaudeWatch]` tag the engine
+# line (red bullet, red error plus the `[plugin:lookout]` tag the engine
 # appends on deny). Both carry the canonical `— <ref>` URL; on the web page it
 # is clickable, which the terminal's plain text is not.
 PROMPT_STYLE = "\n".join([
@@ -130,7 +130,7 @@ def prompt_card(rule, section, extensions):
 
     if section == "block":
         # Mirror the engine's deny output: `<name>: <reason> — <ref>` plus the
-        # `[plugin:ClaudeWatch]` tag the engine appends so a blocked command
+        # `[plugin:lookout]` tag the engine appends so a blocked command
         # still shows its source.
         ref = rule.get("ref") or ""
         err = f"{name}: {reason}"
@@ -139,7 +139,7 @@ def prompt_card(rule, section, extensions):
         return "\n".join([
             '<div class="cw-prompt cw-prompt-block">',
             f'  <div class="cw-prompt-deny"><span class="cw-prompt-bullet">●</span> <strong>{tool}</strong>({bullet_arg})</div>',
-            f'  <div class="cw-prompt-denyerr">└ Error: {err} <span class="cw-prompt-dim">[plugin:ClaudeWatch]</span></div>',
+            f'  <div class="cw-prompt-denyerr">└ Error: {err} <span class="cw-prompt-dim">[plugin:lookout]</span></div>',
             '</div>',
         ])
 
@@ -148,7 +148,7 @@ def prompt_card(rule, section, extensions):
         f'  <div class="cw-prompt-head">{head}</div>',
         f'  <div class="cw-prompt-cmd">{cmd}</div>',
         f'  <div class="cw-prompt-hook">Hook <strong>PreToolUse:{tool}</strong> requires confirmation for this command:</div>',
-        f'  <div class="cw-prompt-msg">{name}: {_reason_with_ref(rule)} <span class="cw-prompt-dim">[plugin:ClaudeWatch]</span></div>',
+        f'  <div class="cw-prompt-msg">{name}: {_reason_with_ref(rule)} <span class="cw-prompt-dim">[plugin:lookout]</span></div>',
         "  <div class=\"cw-prompt-attr\">Edit the plugin's hooks.json to update hooks</div>",
         '  <div class="cw-prompt-q">Do you want to proceed?</div>',
         '  <div class="cw-prompt-opts"><span class="cw-prompt-cursor">❯</span> 1. Yes\n  2. No</div>',
@@ -195,7 +195,7 @@ def main():
         "Generated from rule files in `watches/`.",
         "",
         "> [!TIP]",
-        "> Use the `/ClaudeWatch:rules` skill to move a rule between block and ask, or turn rules off, in an overrides file that survives upgrades.",
+        "> Use the `/lookout:rules` skill to move a rule between block and ask, or turn rules off, in an overrides file that survives upgrades.",
         "",
         "\n\n".join(sections),
         "",

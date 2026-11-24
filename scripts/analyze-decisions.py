@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-analyze-decisions: turn a ClaudeWatch decision log into review proposals.
+analyze-decisions: turn a lookout decision log into review proposals.
 
-Reads the JSONL written by watchdog.py (on by default unless CLAUDEWATCH_LOG is
+Reads the JSONL written by watchdog.py (on by default unless LOOKOUT_LOG is
 off), groups records by command shape, and emits a structured proposal the
-/ClaudeWatch:learn skill renders for batch approval.
+/lookout:learn skill renders for batch approval.
 
 Two buckets:
-  - except_candidates — commands ClaudeWatch repeatedly asks about. Candidates
+  - except_candidates — commands lookout repeatedly asks about. Candidates
                         for an `except` (if a safe variant) or for acceptance.
-  - deny_summary      — commands ClaudeWatch blocked, grouped by reason.
+  - deny_summary      — commands lookout blocked, grouped by reason.
                         Informational: a high count may mean a workflow you
                         need is blocked.
 
@@ -33,7 +33,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from watchdog import command_shape  # noqa: E402
 
 
-DEFAULT_LOG = "~/.claude/claudewatch/decisions.jsonl"
+DEFAULT_LOG = "~/.claude/lookout/decisions.jsonl"
 
 DURATION_UNITS = {"m": "minutes", "h": "hours", "d": "days", "w": "weeks"}
 
@@ -162,9 +162,9 @@ def analyze(records, min_count, max_samples):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze a ClaudeWatch decision log.")
-    parser.add_argument("--log", default=os.environ.get("CLAUDEWATCH_LOG"),
-                        help="path to decisions.jsonl (default: resolved from $CLAUDEWATCH_LOG, "
+    parser = argparse.ArgumentParser(description="Analyze a lookout decision log.")
+    parser.add_argument("--log", default=os.environ.get("LOOKOUT_LOG", os.environ.get("CLAUDEWATCH_LOG")),
+                        help="path to decisions.jsonl (default: resolved from $LOOKOUT_LOG, "
                              f"else {DEFAULT_LOG})")
     parser.add_argument("--since", default=None,
                         help="only consider records newer than this (e.g. 1h, 1d, 1w)")
@@ -201,7 +201,7 @@ def main():
     except FileNotFoundError:
         if logging_disabled:
             print(
-                "analyze-decisions: logging is disabled (CLAUDEWATCH_LOG is set to off).\n"
+                "analyze-decisions: logging is disabled (LOOKOUT_LOG is set to off).\n"
                 "Decision logging is on by default; remove the off setting from the hook\n"
                 "environment in settings.json to re-enable it, then run some sessions.",
                 file=sys.stderr,
@@ -210,7 +210,7 @@ def main():
             print(
                 f"analyze-decisions: no decision log at {os.path.expanduser(args.log)} yet.\n"
                 "Logging is on by default; this usually means no sessions have run with the\n"
-                "ClaudeWatch hook active. Run some sessions, then review.",
+                "lookout hook active. Run some sessions, then review.",
                 file=sys.stderr,
             )
         sys.exit(2)

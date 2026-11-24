@@ -3,8 +3,8 @@
 overrides: read and write the user's rule overrides ([OVR-01]–[OVR-07]).
 
 The shipped rule sets in `watches/` are replaced on every plugin upgrade, so a
-user's changes live in ~/.claude/claudewatch/overrides.yml instead, and this is
-the one program that writes it. /ClaudeWatch:rules and /ClaudeWatch:learn both
+user's changes live in ~/.claude/lookout/overrides.yml instead, and this is
+the one program that writes it. /lookout:rules and /lookout:learn both
 go through it.
 
   overrides.py show [--json]              shipped and effective tier of every rule
@@ -20,6 +20,7 @@ Stdlib-only, no network.
 import glob
 import json
 import os
+import shutil
 import sys
 from datetime import datetime, timezone
 
@@ -36,7 +37,29 @@ from watchdog import (  # noqa: E402
 
 PLUGIN_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WATCHES = os.path.join(PLUGIN_ROOT, "watches")
-HEADER = "# ClaudeWatch rule overrides, written by scripts/overrides.py. Tiers: ask, block, off.\n"
+HEADER = "# lookout rule overrides, written by scripts/overrides.py. Tiers: ask, block, off.\n"
+# Where this plugin kept overrides when it was named ClaudeWatch ([OVR-08]).
+LEGACY_OVERRIDES_PATH = "~/.claude/claudewatch/overrides.yml"
+
+
+def migrate_legacy_overrides():
+    """Copy ClaudeWatch's overrides file into place when lookout has none ([OVR-08]).
+
+    Returns a line for the session context, or None when there was nothing to do.
+    The ClaudeWatch file is left as it is, so ClaudeWatch keeps working until the
+    user switches.
+    """
+    dest = os.path.expanduser(OVERRIDES_PATH)
+    src = os.path.expanduser(LEGACY_OVERRIDES_PATH)
+    if os.path.lexists(dest) or not os.path.isfile(src):
+        return None
+    try:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copyfile(src, dest)
+    except OSError as e:
+        return f"lookout: could not copy your ClaudeWatch rule overrides from {src}: {e}"
+    return (f"lookout: copied your ClaudeWatch rule overrides from {src} to {dest}. "
+            f"lookout reads only the new file from now on.")
 
 
 def shipped_configs():
@@ -150,11 +173,14 @@ def session_start():
     record = {"ts": datetime.now(timezone.utc).isoformat(), "event": "session_start",
               "session": event.get("session_id") if isinstance(event, dict) else None,
               "plugin_version": plugin_version()}
+    migrated = migrate_legacy_overrides()
+    if migrated:
+        print(migrated)
     try:
         overrides = load_overrides()
     except OverridesError as e:
         append_log_record({**record, "overrides_error": str(e)})
-        print(f"ClaudeWatch: the rule overrides file is unreadable, so every screened command and "
+        print(f"lookout: the rule overrides file is unreadable, so every screened command and "
               f"file write will be denied until it is fixed or removed: {e}")
         return
     if not overrides:
@@ -165,8 +191,8 @@ def session_start():
     append_log_record({**record, **report})
     if report["stale"]:
         names = ", ".join(s["set"] + (f" / {s['rule']}" if "rule" in s else "") for s in report["stale"])
-        print(f"ClaudeWatch: these rule overrides name rules the shipped rule sets no longer have, "
-              f"and are ignored: {names}. Run /ClaudeWatch:rules to review them.")
+        print(f"lookout: these rule overrides name rules the shipped rule sets no longer have, "
+              f"and are ignored: {names}. Run /lookout:rules to review them.")
 
 
 def main():

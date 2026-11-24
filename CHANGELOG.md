@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Breaking
+
+- ClaudeWatch is now **lookout**, a lowercase name that meets the plugin
+  naming rules the claude.ai marketplace sync enforces. Install `lookout` in
+  place of `ClaudeWatch`, and don't run both: each would screen every call, so
+  you'd answer each ask twice.
+  - Skills move to `/lookout:rules`, `/lookout:learn`, and
+    `/lookout:unattended`.
+  - State moves to `~/.claude/lookout/`. The first session copies your rule
+    overrides from `~/.claude/claudewatch/overrides.yml` and says so; the
+    ClaudeWatch file is left as it was. The decision log starts fresh.
+  - `LOOKOUT_LOG` replaces `CLAUDEWATCH_LOG`, which is still read when
+    `LOOKOUT_LOG` is unset.
+  - Self-protection (`watch-self`) guards both state folders and both plugin
+    names while you switch over.
+
 ### Other
 
 - The docs qualify `auto` as the default for a session with no permission

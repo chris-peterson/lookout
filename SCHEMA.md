@@ -46,7 +46,7 @@ When a rule fires, the canonical message format is:
 
 For example: `git push --force: overwrites shared remote history — https://git-scm.com/docs/git-push#...`
 
-The rule-set name (`watch-git`) is left out — the `ref` URL supplies that context. Ask prompts, deny errors, and the decision log all carry this same form. A deny message additionally ends with a ` [plugin:ClaudeWatch]` source tag, which Claude Code supplies itself on ask prompts.
+The rule-set name (`watch-git`) is left out — the `ref` URL supplies that context. Ask prompts, deny errors, and the decision log all carry this same form. A deny message additionally ends with a ` [plugin:lookout]` source tag, which Claude Code supplies itself on ask prompts.
 
 ### `filter` (optional)
 
@@ -137,7 +137,7 @@ Selects which engine input the rule's `pattern` runs against. Values:
 
 - `bash` (default) — match against the Bash command string.
 - `file-content` — match against the body of a file being authored via `Write` or modified via `Edit`. Requires the rule set to declare `extensions` listing applicable file extensions; otherwise the rule is never evaluated.
-- `file-path` — match against the `file_path` of a `Write` or `Edit`, for a file guarded by where it is rather than what is written into it. Neither `filter` nor `extensions` gates it, and it runs even when the edit leaves the file empty. `watch-self.yml` uses it to keep the agent out of `~/.claude/claudewatch/`.
+- `file-path` — match against the `file_path` of a `Write` or `Edit`, for a file guarded by where it is rather than what is written into it. Neither `filter` nor `extensions` gates it, and it runs even when the edit leaves the file empty. `watch-self.yml` uses it to keep the agent out of `~/.claude/lookout/`.
 
 A single rule set may mix targets. For example, `watch-pwsh.yml` ships both inline-script rules (run against `pwsh -Command "..."` bash invocations) and file-content rules (run against `.ps1`/`.psm1`/`.psd1` script bodies).
 

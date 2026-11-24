@@ -19,7 +19,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/claudewatch-hostprobe.XXXXXX")"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/lookout-hostprobe.XXXXXX")"
 LOG="$WORK/decisions.jsonl"
 
 trap 'rm -rf "$WORK"' EXIT
@@ -37,7 +37,7 @@ probe() {
   echo probe > "$target"
   chmod 600 "$target"
 
-  CLAUDEWATCH_LOG="$LOG" claude --plugin-dir "$PLUGIN_ROOT" "$@" \
+  LOOKOUT_LOG="$LOG" claude --plugin-dir "$PLUGIN_ROOT" "$@" \
     -p "run exactly this bash command and nothing else: chmod 644 $target" \
     >/dev/null 2>&1
 

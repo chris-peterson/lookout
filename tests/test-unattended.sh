@@ -7,7 +7,7 @@ source "$(cd "$(dirname "$0")" && pwd)/harness.sh"
 UNATTENDED="$SCRIPT_DIR/../scripts/unattended.py"
 SANDBOX=$(mktemp -d /tmp/cw-unattended.XXXXXX)
 export HOME="$SANDBOX"
-MARKERS="$SANDBOX/.claude/claudewatch/unattended"
+MARKERS="$SANDBOX/.claude/lookout/unattended"
 SID="sess-1"
 
 check() {
@@ -48,9 +48,9 @@ run_test "$RULES_DIR" "a session id with a path in it names no marker" ask \
 
 echo "--- engine: the unattended allowance ([SK-24]) ---"
 DECISIONS="$SANDBOX/decisions.jsonl"
-out=$(bash_input "git commit -F msg.txt" | CLAUDEWATCH_LOG="$DECISIONS" python3 "$HOOK" "$RULES_DIR")
+out=$(bash_input "git commit -F msg.txt" | LOOKOUT_LOG="$DECISIONS" python3 "$HOOK" "$RULES_DIR")
 check "unattended: a bare commit stays silent" "$( [ -z "$out" ] && echo yes || echo no)"
-check "the allowance is an ALLOW line in the session log" "$(has "$(cat "$MARKERS/$SID.log")" "ALLOW	git commit (ClaudeWatch ask not escalated: git commit)")"
+check "the allowance is an ALLOW line in the session log" "$(has "$(cat "$MARKERS/$SID.log")" "ALLOW	git commit (lookout ask not escalated: git commit)")"
 check "and an unattended_allow field on the decision record" "$(has "$(tail -n 1 "$DECISIONS")" '"unattended_allow":"git commit"')"
 run_test "$RULES_DIR" "unattended: commit under git -C is allowed" allow "$(bash_input "git -C /repo commit -m wip")"
 run_test "$RULES_DIR" "unattended: commit --amend is denied" block "$(bash_input "git commit --amend --no-edit")"
@@ -59,8 +59,8 @@ run_test "$RULES_DIR" "attended: a bare commit still asks" ask "$(bash_input "gi
 rm -f "$MARKERS/$SID" "$MARKERS/$SID.log"
 
 echo "--- hook: marking and unmarking ---"
-hook '{"hook_event_name":"UserPromptSubmit","session_id":"'"$SID"'","prompt":"/ClaudeWatch:unattended finish the migration"}' >/dev/null
-check "typing /ClaudeWatch:unattended marks the session" "$(exists "$MARKERS/$SID")"
+hook '{"hook_event_name":"UserPromptSubmit","session_id":"'"$SID"'","prompt":"/lookout:unattended finish the migration"}' >/dev/null
+check "typing /lookout:unattended marks the session" "$(exists "$MARKERS/$SID")"
 rm -f "$MARKERS/$SID"
 hook '{"hook_event_name":"UserPromptSubmit","session_id":"'"$SID"'","prompt":"/unattended"}' >/dev/null
 check "typing /unattended marks the session" "$(exists "$MARKERS/$SID")"
@@ -71,10 +71,10 @@ check "a typed prompt clears the mark" "$(absent "$MARKERS/$SID")"
 check "and says so in context" "$(has "$out" "unattended: off")"
 out=$(hook '{"hook_event_name":"UserPromptSubmit","session_id":"'"$SID"'","prompt":"another question"}')
 check "a typed prompt while attended says nothing" "$( [ -z "$out" ] && echo yes || echo no)"
-hook '{"hook_event_name":"PostToolUse","session_id":"'"$SID"'","tool_name":"Skill","tool_input":{"skill":"ClaudeWatch:unattended"}}' >/dev/null
+hook '{"hook_event_name":"PostToolUse","session_id":"'"$SID"'","tool_name":"Skill","tool_input":{"skill":"lookout:unattended"}}' >/dev/null
 check "the agent invoking the skill marks the session" "$(exists "$MARKERS/$SID")"
 rm -f "$MARKERS/$SID"
-hook '{"hook_event_name":"PostToolUse","session_id":"'"$SID"'","tool_name":"Skill","tool_input":{"skill":"ClaudeWatch:learn"}}' >/dev/null
+hook '{"hook_event_name":"PostToolUse","session_id":"'"$SID"'","tool_name":"Skill","tool_input":{"skill":"lookout:learn"}}' >/dev/null
 check "another skill leaves it unmarked" "$(absent "$MARKERS/$SID")"
 
 echo "--- hook: permission prompts ---"

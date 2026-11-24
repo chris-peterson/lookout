@@ -1,4 +1,4 @@
-# Don't treat ClaudeWatch's ask tier as a confirmation
+# Don't treat lookout's ask tier as a confirmation
 
 Whether an `ask` reaches a person depends on how the session was launched and
 configured, and the hook cannot tell which case it is in. Known cases:
@@ -11,7 +11,7 @@ configured, and the hook cannot tell which case it is in. Known cases:
   Code 2.1.319 asks about or denies calls the server can't check instead.
   `auto` is also where a session with no permission mode configured starts,
   unless the organization's server-managed settings set a `defaultMode` (Claude
-  Code 2.1.326); if the user expects ClaudeWatch to prompt, tell them to set
+  Code 2.1.326); if the user expects lookout to prompt, tell them to set
   `"permissions": { "defaultMode": "default" }`.
 - **`permissions.denyInsteadOfPrompting` denies it**, interactive sessions,
   subagents and teammates included, and the turn continues (Claude Code

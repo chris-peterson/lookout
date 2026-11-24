@@ -2,7 +2,7 @@
 # Permission-prompt output formatting. Every reason reads
 # `<rule>: <reason> — <ref>` — the same canonical form in the ask prompt, the
 # deny error, and the decision log. Deny additionally carries the
-# `[plugin:ClaudeWatch]` source tag the host omits on errors. Nothing on the
+# `[plugin:lookout]` source tag the host omits on errors. Nothing on the
 # display path emits a terminal escape sequence: the host replaces control
 # characters in a hook's reason with U+FFFD, so one would reach the user as
 # visible garbage.
@@ -40,7 +40,7 @@ YAMLEOF
 # Print the emitted permissionDecisionReason for an input.
 fmt_reason() {
   local input="$1"
-  echo "$input" | env CLAUDEWATCH_LOG=off python3 "$HOOK" "$TMPDIR_OUT/watch-fmt.yml" 2>/dev/null \
+  echo "$input" | env LOOKOUT_LOG=off python3 "$HOOK" "$TMPDIR_OUT/watch-fmt.yml" 2>/dev/null \
     | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin)["hookSpecificOutput"]["permissionDecisionReason"])'
 }
 
@@ -95,14 +95,14 @@ for label_input in "ask:$NEEDS_REF" "no-ref:$BARE" "multi:$MULTI" "deny:$BOOM"; 
   assert_reason "${label_input%%:*}: reason is escape-free" "${label_input#*:}" "$ESC" no
 done
 
-echo "--- deny path appends the [plugin:ClaudeWatch] source tag (ask gets it from the host) ---"
-assert_reason "deny reason ends with the source tag"   "$BOOM"      "https://example.com/boom [plugin:ClaudeWatch]" yes
-assert_reason "ask reason does not add the source tag" "$NEEDS_REF" "[plugin:ClaudeWatch]"                          no
+echo "--- deny path appends the [plugin:lookout] source tag (ask gets it from the host) ---"
+assert_reason "deny reason ends with the source tag"   "$BOOM"      "https://example.com/boom [plugin:lookout]" yes
+assert_reason "ask reason does not add the source tag" "$NEEDS_REF" "[plugin:lookout]"                          no
 
 echo "--- logged reasons match the displayed canonical form ---"
 LOGF=$(mktemp -u /tmp/cw-fmtlog.XXXXXX.jsonl)
 echo "$NEEDS_REF" \
-  | env CLAUDEWATCH_LOG="$LOGF" python3 "$HOOK" "$TMPDIR_OUT/watch-fmt.yml" >/dev/null 2>&1 || true
+  | env LOOKOUT_LOG="$LOGF" python3 "$HOOK" "$TMPDIR_OUT/watch-fmt.yml" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
 if python3 -c 'import json,sys; rec=json.loads(open(sys.argv[1]).read().splitlines()[-1]); m=rec.get("matched",[]); sys.exit(0 if m and all("\x1b" not in x for x in m) and any("has a doc link — https://example.com/docs" in x for x in m) else 1)' "$LOGF"; then
   PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: logged matched reasons carry the ref inline, no escapes"
@@ -114,9 +114,9 @@ rm -f "$LOGF"
 # The deny display tag is a presentation detail; the log keeps the canonical form.
 DENYLOG=$(mktemp -u /tmp/cw-denylog.XXXXXX.jsonl)
 echo "$BOOM" \
-  | env CLAUDEWATCH_LOG="$DENYLOG" python3 "$HOOK" "$TMPDIR_OUT/watch-fmt.yml" >/dev/null 2>&1 || true
+  | env LOOKOUT_LOG="$DENYLOG" python3 "$HOOK" "$TMPDIR_OUT/watch-fmt.yml" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
-if python3 -c 'import json,sys; rec=json.loads(open(sys.argv[1]).read().splitlines()[-1]); m=rec.get("matched",[]); sys.exit(0 if m and all("[plugin:ClaudeWatch]" not in x for x in m) else 1)' "$DENYLOG"; then
+if python3 -c 'import json,sys; rec=json.loads(open(sys.argv[1]).read().splitlines()[-1]); m=rec.get("matched",[]); sys.exit(0 if m and all("[plugin:lookout]" not in x for x in m) else 1)' "$DENYLOG"; then
   PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: logged deny reason omits the source tag"
 else
   FAIL=$((FAIL + 1)); echo -e "  ${RED}FAIL${NC}: logged deny reason omits the source tag"

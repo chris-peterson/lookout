@@ -1,18 +1,18 @@
 #!/bin/bash
-# Engine decision logging (CLAUDEWATCH_LOG). Logging is an opt-in side channel
+# Engine decision logging (LOOKOUT_LOG). Logging is an opt-in side channel
 # that must not change the emitted decision or the exit code.
 source "$(cd "$(dirname "$0")" && pwd)/harness.sh"
 
-echo "=== decision logging (CLAUDEWATCH_LOG) ==="
+echo "=== decision logging (LOOKOUT_LOG) ==="
 
-# Run the hook with CLAUDEWATCH_LOG set, then assert the last logged record's
+# Run the hook with LOOKOUT_LOG set, then assert the last logged record's
 # "decision" field matches what the rules produce for the input.
 log_decision_test() {
   local label="$1" expected_decision="$2" input="$3"
   local logfile
   logfile=$(mktemp /tmp/cw-log.XXXXXX.jsonl)
   TOTAL=$((TOTAL + 1))
-  echo "$input" | CLAUDEWATCH_LOG="$logfile" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  echo "$input" | LOOKOUT_LOG="$logfile" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
   local got
   got=$(python3 -c 'import json,sys; print(json.loads(open(sys.argv[1]).read().splitlines()[-1])["decision"])' "$logfile" 2>/dev/null || true)
   rm -f "$logfile"
@@ -30,7 +30,7 @@ log_decision_test "deny decision is logged"  deny  '{"tool_name":"Bash","tool_in
 echo "--- logged record carries the command shape, not the raw command (LOG-03) ---"
 LOGFILE=$(mktemp /tmp/cw-cmd.XXXXXX.jsonl)
 echo '{"tool_name":"Bash","tool_input":{"command":"git push --force https://user:s3cr3t-token@host/repo"}}' \
-  | CLAUDEWATCH_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | LOOKOUT_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
 # The record stores command_shape="git push", carries no raw `command` field, and
 # the inline credential never appears anywhere in the serialized line.
@@ -50,7 +50,7 @@ rm -f "$LOGFILE"
 echo "--- a Monitor decision logs under its own tool name (LOG-03) ---"
 MONLOG=$(mktemp /tmp/cw-monitor.XXXXXX.jsonl)
 echo '{"tool_name":"Monitor","tool_input":{"command":"aws logs tail /aws/ecs/foo --follow"}}' \
-  | CLAUDEWATCH_LOG="$MONLOG" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | LOOKOUT_LOG="$MONLOG" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
 # `tool` is what tells the analyzer which permission-rule family a candidate
 # belongs to, and the shape reduction applies to a Monitor command the same way.
@@ -73,7 +73,7 @@ log_shape_test() {
   local label="$1" input="$2" expr="$3"
   local f
   f=$(mktemp /tmp/cw-shape.XXXXXX.jsonl)
-  echo "$input" | CLAUDEWATCH_LOG="$f" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  echo "$input" | LOOKOUT_LOG="$f" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
   TOTAL=$((TOTAL + 1))
   if python3 -c "
 import json, sys
@@ -113,10 +113,10 @@ log_shape_test "an allowed command logs no matched_shapes" \
 
 echo "--- log file and dir are owner-only (LOG-05) ---"
 HOMEDIR=$(mktemp -d /tmp/cw-perms.XXXXXX)
-DEFAULT_LOG="$HOMEDIR/.claude/claudewatch/decisions.jsonl"
+DEFAULT_LOG="$HOMEDIR/.claude/lookout/decisions.jsonl"
 TOTAL=$((TOTAL + 1))
 echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' \
-  | env -u CLAUDEWATCH_LOG HOME="$HOMEDIR" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | env -u LOOKOUT_LOG HOME="$HOMEDIR" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 # Read the mode via Python — portable across BSD/macOS and GNU stat flag differences.
 FILE_MODE=$(python3 -c 'import os,sys; print(oct(os.stat(sys.argv[1]).st_mode & 0o777)[2:])' "$DEFAULT_LOG" 2>/dev/null || true)
 DIR_MODE=$(python3 -c 'import os,sys; print(oct(os.stat(sys.argv[1]).st_mode & 0o777)[2:])' "$(dirname "$DEFAULT_LOG")" 2>/dev/null || true)
@@ -130,7 +130,7 @@ rm -rf "$HOMEDIR"
 echo "--- a fresh log opens with a schema header (LOG-06) ---"
 LOGFILE=$(mktemp -u /tmp/cw-schema.XXXXXX.jsonl)
 echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' \
-  | CLAUDEWATCH_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | LOOKOUT_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
 if python3 -c 'import json,sys; sys.exit(0 if json.loads(open(sys.argv[1]).read().splitlines()[0])=={"schema":2} else 1)' "$LOGFILE" 2>/dev/null; then
   PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: log opens with a {\"schema\":2} header"
@@ -144,7 +144,7 @@ LOGFILE=$(mktemp /tmp/cw-migrate.XXXXXX.jsonl)
 # Simulate a v1 log: no header, one raw-command record carrying an inline secret.
 printf '%s\n' '{"ts":"2026-01-01T00:00:00+00:00","decision":"allow","tool":"Bash","command":"curl -H \"Authorization: Bearer sk-leaked\""}' > "$LOGFILE"
 echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' \
-  | CLAUDEWATCH_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | LOOKOUT_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
 # After the write the log is a fresh v2: header line, only the new shape-only
 # record, and the old raw command's secret is gone.
@@ -166,7 +166,7 @@ rm -f "$LOGFILE"
 echo "--- logged record carries the matched rule reasons for ask/deny ---"
 LOGFILE=$(mktemp /tmp/cw-matched.XXXXXX.jsonl)
 echo '{"tool_name":"Bash","tool_input":{"command":"git push --force origin main"}}' \
-  | CLAUDEWATCH_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | LOOKOUT_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
 if python3 -c 'import json,sys; rec=json.loads(open(sys.argv[1]).read().splitlines()[-1]); sys.exit(0 if rec["decision"]=="deny" and len(rec.get("matched",[]))>=1 else 1)' "$LOGFILE" 2>/dev/null; then
   PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: matched reasons recorded for deny"
@@ -178,7 +178,7 @@ rm -f "$LOGFILE"
 echo "--- logged record carries the active permission_mode ---"
 LOGFILE=$(mktemp /tmp/cw-mode.XXXXXX.jsonl)
 echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"},"permission_mode":"auto"}' \
-  | CLAUDEWATCH_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | LOOKOUT_LOG="$LOGFILE" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 TOTAL=$((TOTAL + 1))
 if python3 -c 'import json,sys; sys.exit(0 if json.loads(open(sys.argv[1]).read().splitlines()[-1]).get("mode")=="auto" else 1)' "$LOGFILE" 2>/dev/null; then
   PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: permission_mode recorded in log"
@@ -187,15 +187,15 @@ else
 fi
 rm -f "$LOGFILE"
 
-echo "--- logging is on by default: unset CLAUDEWATCH_LOG writes the default path ---"
-# Sandbox HOME to a tmp dir so the default path (~/.claude/claudewatch/...)
+echo "--- logging is on by default: unset LOOKOUT_LOG writes the default path ---"
+# Sandbox HOME to a tmp dir so the default path (~/.claude/lookout/...)
 # resolves there instead of the real user log. env -u drops the harness's
-# exported CLAUDEWATCH_LOG=off so the engine sees it as unset.
+# exported LOOKOUT_LOG=off so the engine sees it as unset.
 HOMEDIR=$(mktemp -d /tmp/cw-home.XXXXXX)
-DEFAULT_LOG="$HOMEDIR/.claude/claudewatch/decisions.jsonl"
+DEFAULT_LOG="$HOMEDIR/.claude/lookout/decisions.jsonl"
 TOTAL=$((TOTAL + 1))
 echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' \
-  | env -u CLAUDEWATCH_LOG HOME="$HOMEDIR" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+  | env -u LOOKOUT_LOG HOME="$HOMEDIR" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
 if [ -s "$DEFAULT_LOG" ]; then
   PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: default-path log written when env unset"
 else
@@ -203,17 +203,17 @@ else
 fi
 rm -rf "$HOMEDIR"
 
-echo "--- opt-out: CLAUDEWATCH_LOG=off writes no log ---"
+echo "--- opt-out: LOOKOUT_LOG=off writes no log ---"
 for off_value in off 0 false none ""; do
   HOMEDIR=$(mktemp -d /tmp/cw-off.XXXXXX)
-  DEFAULT_LOG="$HOMEDIR/.claude/claudewatch/decisions.jsonl"
+  DEFAULT_LOG="$HOMEDIR/.claude/lookout/decisions.jsonl"
   TOTAL=$((TOTAL + 1))
   echo '{"tool_name":"Bash","tool_input":{"command":"ls -la"}}' \
-    | CLAUDEWATCH_LOG="$off_value" HOME="$HOMEDIR" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
+    | LOOKOUT_LOG="$off_value" HOME="$HOMEDIR" python3 "$HOOK" "$RULES_DIR" >/dev/null 2>&1 || true
   if [ ! -e "$DEFAULT_LOG" ]; then
-    PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: no log written for CLAUDEWATCH_LOG='${off_value}'"
+    PASS=$((PASS + 1)); echo -e "  ${GREEN}PASS${NC}: no log written for LOOKOUT_LOG='${off_value}'"
   else
-    FAIL=$((FAIL + 1)); echo -e "  ${RED}FAIL${NC}: no log written for CLAUDEWATCH_LOG='${off_value}'"
+    FAIL=$((FAIL + 1)); echo -e "  ${RED}FAIL${NC}: no log written for LOOKOUT_LOG='${off_value}'"
   fi
   rm -rf "$HOMEDIR"
 done

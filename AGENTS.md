@@ -1,11 +1,11 @@
-# AGENTS.md — Working on ClaudeWatch
+# AGENTS.md — Working on lookout
 
-This is the build philosophy and key constraints document for ClaudeWatch.
+This is the build philosophy and key constraints document for lookout.
 The contract lives in [`SPEC.md`](SPEC.md); this document captures the *how to
 think about it*. Every Claude Code session should read this before making
 non-trivial changes.
 
-## What ClaudeWatch is
+## What lookout is
 
 A Claude Code plugin that wraps every shell invocation — `Bash` and `Monitor`,
 which runs its command in the same shell — in a `PreToolUse` hook and applies
@@ -23,7 +23,7 @@ heredocs, and reordered flags are not bypassable by syntactic tricks.
    `CLAUDE_PROJECT_DIR` enter the decision only as the deterministic per-invocation
    inputs the `is_in_project_tree` predicate ([RL-15], [RL-16]) resolves `rm`
    targets against — pure string work, no filesystem access. `CLAUDE_PROJECT_DIR`
-   is the one environment variable on the decision path; `CLAUDEWATCH_LOG`
+   is the one environment variable on the decision path; `LOOKOUT_LOG`
    governs a side channel only. The one predicate that does read the filesystem
    is `is_recoverable` ([RL-18]), which asks git whether a delete target could
    be restored — a question with no textual answer. Its calls are
@@ -35,7 +35,7 @@ heredocs, and reordered flags are not bypassable by syntactic tricks.
    in effect, and whether the session's unattended marker exists ([OUT-09]), an
    existence test that only ever tightens `ask` to `deny`.
    Decision logging (on by default, see
-   [LOG-01]–[LOG-04]; `CLAUDEWATCH_LOG=off` opts out) is a side channel: it
+   [LOG-01]–[LOG-04]; `LOOKOUT_LOG=off` opts out) is a side channel: it
    stamps a timestamp and writes a file *after* the decision is computed, never
    feeding back into it. Keep it that way — the clock stays in `_log_event`, not
    in `evaluate_rules`.
@@ -122,7 +122,7 @@ heredocs, and reordered flags are not bypassable by syntactic tricks.
   block the commands needed to fix it. Project settings outrank user settings,
   so this holds for every clone without anyone configuring it. Consequences
   while working here: your own commands are not screened, so this is not the
-  place to judge whether a rule fires, and `~/.claude/claudewatch/decisions.jsonl`
+  place to judge whether a rule fires, and `~/.claude/lookout/decisions.jsonl`
   gets no records from this session. Exercise a change with `just try` (an
   interactive session with `--plugin-dir .`), or pipe a payload straight into
   the engine the way `tests/harness.sh` does.
@@ -130,8 +130,8 @@ heredocs, and reordered flags are not bypassable by syntactic tricks.
 ## When making changes
 
 - **Rule edits** — Edit the shipped rules in `watches/*.yml` directly and run
-  `just test`. `/ClaudeWatch:rules` is for users: it writes their overrides
-  file (`~/.claude/claudewatch/overrides.yml`, [OVR-01]), never `watches/`, so
+  `just test`. `/lookout:rules` is for users: it writes their overrides
+  file (`~/.claude/lookout/overrides.yml`, [OVR-01]), never `watches/`, so
   it is not how a shipped rule changes. The test harness points `HOME` at an
   empty path, so your own overrides never reach the suite.
 - **Engine changes** — Update `scripts/watchdog.py` and `tests/test-engine.sh`
@@ -209,7 +209,7 @@ Dispatching triggers shipyard's reusable release workflow, which:
 
 `main` is always the latest released state, and `version` in `plugin.yml`
 stays the source of truth — but it's now *written by* the release rather than
-hand-edited. The chris-peterson marketplace tracks ClaudeWatch as an unpinned
+hand-edited. The chris-peterson marketplace tracks lookout as an unpinned
 git source (default-branch HEAD), so step 4's commit to `main` is the moment
 consumers see the update; the tag and the marketplace notify are not what
 `claude plugin update` reads.
@@ -224,7 +224,7 @@ consumers see the update; the tag and the marketplace notify are not what
 - **The hooks set no `shell`.** README's Installation section lists what that
   requires of a host. Declaring a `shell` per hook to support Windows is a spec
   change, not a quick fix.
-- **YAML parser is minimal.** It handles the format ClaudeWatch ships and
+- **YAML parser is minimal.** It handles the format lookout ships and
   nothing more. Multi-line strings, anchors, and `!!tag` constructs are not
   supported. If you need them, that's a spec discussion, not a copy-paste of
   PyYAML.

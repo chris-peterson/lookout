@@ -1,17 +1,13 @@
-# Canonical descriptor for the ClaudeWatch plugin — edit here, never plugin.json.
+# Canonical descriptor for the lookout plugin — edit here, never plugin.json.
 # CI's project job (.github/workflows/project.yml) projects this into
 # .claude-plugin/plugin.json and the marketplace SPA (the suite: block).
 # Schema: suite/plugin.schema.md.
 
-# Intentionally PascalCase, not the kebab-case convention: the name is
-# load-bearing in the command namespace (/ClaudeWatch:rules, /ClaudeWatch:learn)
-# and the pages URL, so renaming would break installed references. Accepted
-# convention exception — not a finding to re-raise.
-name: ClaudeWatch
+name: lookout
 version: 1.0.1
 description: "Screens every shell command and every file Claude writes, before either lands. Blocks the dangerous, asks on anything that changes state."
 author: chris-peterson
-repository: https://github.com/chris-peterson/ClaudeWatch
+repository: https://github.com/chris-peterson/lookout
 icon: .claude-plugin/icon.svg
 license: MIT
 keywords: [claude, watch, safety, permissions, guardrail, hook, watchdog, installs, git-guardian]
@@ -24,58 +20,51 @@ validate:
         CLAUDE.md at the root is this repo's own agent instructions, not context
         the plugin ships. It imports AGENTS.md and adds the Claude Code
         specifics: the local test commands and the hook's stdin/stdout protocol.
-    - warning: name
-      path: .claude-plugin/plugin.json
-      because: >-
-        Renaming would break every installed copy. The name is the
-        enabledPlugins key, the marketplace entry, and the cache path each
-        session loads from. Claude Code accepts it as it stands; only the
-        claude.ai marketplace sync requires kebab-case.
 
 # → marketplace.json entry
 marketplace:
   category: security
-  homepage: https://chris-peterson.github.io/ClaudeWatch/#/
+  homepage: https://chris-peterson.github.io/lookout/#/
 
 # → marketplace SPA; keys mirror the SPA's PLUGINS object.
 suite:
   group: safety
   # Activated by the agent (the PreToolUse hook screens what the agent runs) and
-  # the user (the /ClaudeWatch:learn and :rules skills).
+  # the user (the /lookout:learn and :rules skills).
   activations: [agent, user]
-  gloss: "ClaudeWatch: agents move fast; watch them closely."
+  gloss: "lookout: agents move fast; watch them closely."
   pitch: "Stop allowing commands you haven't actually read. Save your attention for the decisions that matter."
   what: "Screens every shell command (and the code Claude writes to disk) before it runs, matching real patterns rather than naive prefixes, so reordered flags and chained commands don't slip past. Blocks the genuinely dangerous; asks before anything that changes state."
   cmds:
-    - ["/ClaudeWatch:rules", "See the rules and change how they apply to you"]
-    - ["/ClaudeWatch:learn", "Tune the rules from what's been prompting you"]
-    - ["/ClaudeWatch:unattended", "Step away: the agent decides, logs, and never waits on a prompt"]
+    - ["/lookout:rules", "See the rules and change how they apply to you"]
+    - ["/lookout:learn", "Tune the rules from what's been prompting you"]
+    - ["/lookout:unattended", "Step away: the agent decides, logs, and never waits on a prompt"]
   # The automatic block/ask flow is the primary interaction (see session: below);
   # these examples are anchored on the two skills, for when you look under the hood.
   # >>> shipyard:describe — generated from source by `shipyard gen-describe`; do not edit >>>
   describe:
     skills:
-      learn: Analyze the ClaudeWatch decision log to find the rules that ask most and the blocks that get in the way, and propose overrides (move a rule between ask and block, or turn it off) reviewed as one batch, then reset the log.
-      rules: 'View ClaudeWatch''s rules and change how they apply to you: move a rule between block and ask, turn a rule or a whole rule set off, or restore the shipped tier, kept in an overrides file that survives plugin upgrades.'
-      unattended: Work while the user is away, making best-judgment calls, logging them, and never waiting on a question, a permission prompt, or a ClaudeWatch ask.
+      learn: Analyze the lookout decision log to find the rules that ask most and the blocks that get in the way, and propose overrides (move a rule between ask and block, or turn it off) reviewed as one batch, then reset the log.
+      rules: 'View lookout''s rules and change how they apply to you: move a rule between block and ask, turn a rule or a whole rule set off, or restore the shipped tier, kept in an overrides file that survives plugin upgrades.'
+      unattended: Work while the user is away, making best-judgment calls, logging them, and never waiting on a question, a permission prompt, or a lookout ask.
     rules:
-      ask-is-not-a-confirmation: Don't treat ClaudeWatch's ask tier as a confirmation
+      ask-is-not-a-confirmation: Don't treat lookout's ask tier as a confirmation
       avoid-compound-commands: Before you pipe or chain, check the lead command
     hooks:
-      emit-rules: SessionStart — Emit ClaudeWatch's ambient guidance into context.
+      emit-rules: SessionStart — Emit lookout's ambient guidance into context.
       hooks: 'Hook wiring: PreToolUse→watchdog (Bash|Monitor, Write|Edit), unattended (AskUserQuestion); SessionStart→emit-rules, overrides; UserPromptSubmit→unattended; PostToolUse→unattended (Skill); PermissionRequest→unattended.'
   # <<< shipyard:describe <<<
   examples:
-    - label: "/ClaudeWatch:rules"
+    - label: "/lookout:rules"
       ac: "--purple"
       frames:
-        - { t: you, text: "/ClaudeWatch:rules" }
+        - { t: you, text: "/lookout:rules" }
         - { t: claude, text: "watch-git blocks git push --force and asks before git push and git commit. Move one between block and ask, or turn it off?" }
         - { t: status, text: "previews the change, then writes it to your overrides file, which survives upgrades" }
-    - label: "/ClaudeWatch:learn"
+    - label: "/lookout:learn"
       ac: "--cyan"
       frames:
-        - { t: you, text: "/ClaudeWatch:learn" }
+        - { t: you, text: "/lookout:learn" }
         - { t: claude, text: "git stash asked 14 times this week and you approved every one. Turn that rule off?" }
         - { t: status, text: "proposes overrides from your decision log, applied once you approve each one" }
   session:
